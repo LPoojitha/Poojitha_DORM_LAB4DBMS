@@ -62,6 +62,7 @@ INSERT INTO supplier values(4, 'Bansal Retails', 'Kochi', '8975463285');
 INSERT INTO supplier values(5, 'Mittal Ltd.', 'Lucknow', '7898456532');
 
 insert into customer values(1,"AAKASH",'9999999999',"DELHI",'M');
+insert into customer values(2,"AMAN",'9785463215',"NOIDA",'M');
 insert into category values( 1,"BOOKS");
 insert into category values( 2,"GAMES");
 insert into category values( 4,"ELECTRONICS");
@@ -90,29 +91,36 @@ inner join product on product.pro_id=supplier_pricing.pro_id where `order`.ord_d
 
 select customer.cus_name,customer.cus_gender from customer where customer.cus_name like 'A%' or customer.cus_name like '%A';
 
-CREATE PROCEDURE display_supplier_ratings()
-BEGIN
-    SELECT 
-        s.SUPP_ID,
-        s.SUPP_NAME,
-        AVG(p.RATING) AS Rating,
-        CASE
-            WHEN AVG(p.RATING) = 5 THEN 'Excellent Service'
-            WHEN AVG(p.RATING) > 4 THEN 'Good Service'
-            WHEN AVG(p.RATING) > 2 THEN 'Average Service'
-            ELSE 'Poor Service'
-        END AS Type_of_Service
-    FROM 
-        supplier s
-    JOIN 
-        product p ON s.SUPP_ID = p.SUPP_ID
-    GROUP BY 
-        s.SUPP_ID, s.SUPP_NAME
-END//
+DELIMITER //
+CREATE PROCEDURE ratings()
+begin
+select supplier.supp_id, supplier.supp_name, avg(rating.rat_ratstars),
+CASE
+when avg(rating.rat_ratstars) >=5
+then "excellent"
+when avg(rating.rat_ratstars) <5 and avg(rating.rat_ratstars)>=4
+then "good Service"
+when avg(rating.rat_ratstars)<4 and avg(rating.rat_ratstars)>2
+then "Average service"
+else "poor service"
+end as Type_of_Service from rating
+inner join `order`
+on `order`.ord_id=rating.ord_id
+inner join supplier_pricing
+on supplier_pricing.pricing_id= `order`.pricing_id
+inner join supplier
+on supplier.supp_id= supplier_pricing.supp_id
+GROUP BY supplier.SUPP_ID
+ORDER BY SUPP_ID;
+end //
 
-DELIMITER ;
-
-CALL display_supplier_ratings();
+call ratings();
 
 
+SELECT `order`.ord_id, product.pro_name
+FROM `order`
+JOIN supplier_pricing ON `order`.pricing_id= supplier_pricing.pricing_id 
+JOIN product ON supplier_pricing.pro_id=product.pro_id
+WHERE `order`.cus_id = 1;
 
+select * from `order`;
